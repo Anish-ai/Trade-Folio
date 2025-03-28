@@ -1,0 +1,52 @@
+# Dependency directories
+node_modules/
+.server/node_modules/
+.client/node_modules/
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.production
+
+# Build directories
+.server/dist/
+.client/.next/
+.client/out/
+
+# Database
+# .server/prisma/migrations/
+# *.db
+# *.sqlite
+# *.sqlite3
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE/Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+
+# System Files
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage/
+.nyc_output/
+
+# Debug
+dump.rdb
+
+# Local development
+.server/.env
+.server/.env.*
+.server/temp/
+.server/uploads/
