@@ -6,3 +6,170 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model User {
+  id            String          @id @default(uuid())
+  username      String          @unique
+  email         String          @unique
+  password      String?
+  name          String?
+  balance       Float           @default(0)
+  isVirtual     Boolean         @default(false)
+  verified      Boolean         @default(false)
+  portfolio     Portfolio?
+  transactions  Transaction[]
+  chatSessions  ChatSession[]
+  activities    UserActivity[]
+  payments      Payment[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@index([email])
+}
+
+model Portfolio {
+  id           String             @id @default(uuid())
+  userId       String             @unique
+  user         User               @relation(fields: [userId], references: [id])
+  holdings     StockHolding[]
+  snapshots    PortfolioSnapshot[]
+  createdAt    DateTime           @default(now())
+
+  @@index([userId])
+}
+
+model Stock {
+  id           String         @id @default(uuid())
+  symbol       String         @unique
+  name         String
+  currentPrice Float
+  change       Float
+  high         Float?
+  low          Float?
+  volume       Int?
+  marketCap    Float?
+  sector       String?
+  history      StockHistory[]
+  holdings     StockHolding[]
+  transactions Transaction[]
+  updatedAt    DateTime       @updatedAt
+
+  @@index([symbol])
+  @@index([sector])
+}
+
+model StockHolding {
+  id          String    @id @default(uuid())
+  portfolioId String
+  stockId     String
+  quantity    Int       @default(0)
+  avgPrice    Float
+  portfolio   Portfolio @relation(fields: [portfolioId], references: [id])
+  stock       Stock     @relation(fields: [stockId], references: [id])
+
+  @@index([portfolioId, stockId])
+}
+
+model Transaction {
+  id            String   @id @default(uuid())
+  userId        String
+  stockId       String
+  type          String   // "BUY" | "SELL" | "DIVIDEND"
+  quantity      Int
+  price         Float
+  totalAmount   Float
+  status        String   @default("COMPLETED")
+  balanceBefore Float
+  balanceAfter  Float
+  metadata      Json?    // AI rationale, market conditions
+  user          User     @relation(fields: [userId], references: [id])
+  stock         Stock    @relation(fields: [stockId], references: [id])
+  createdAt     DateTime @default(now())
+
+  @@index([userId, stockId])
+  @@index([createdAt])
+}
+
+model ChatSession {
+  id          String       @id @default(uuid())
+  userId      String
+  title       String       @default("New Chat")
+  messages    ChatMessage[]
+  user        User         @relation(fields: [userId], references: [id])
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([userId])
+}
+
+model ChatMessage {
+  id          String      @id @default(uuid())
+  sessionId   String
+  role        String      // "user" | "ai" | "system"
+  content     String
+  metadata    Json?       // AI model version, confidence, analysis
+  session     ChatSession @relation(fields: [sessionId], references: [id])
+  createdAt   DateTime    @default(now())
+
+  @@index([sessionId])
+}
+
+model StockHistory {
+  id        String   @id @default(uuid())
+  stockId   String
+  price     Float
+  volume    Int?
+  timestamp DateTime @default(now())
+  stock     Stock    @relation(fields: [stockId], references: [id])
+
+  @@index([stockId, timestamp])
+}
+
+model PortfolioSnapshot {
+  id          String    @id @default(uuid())
+  portfolioId String
+  totalValue  Float
+  timestamp   DateTime  @default(now())
+  portfolio   Portfolio @relation(fields: [portfolioId], references: [id])
+
+  @@index([portfolioId, timestamp])
+}
+
+model Payment {
+  id          String   @id @default(uuid())
+  userId      String
+  amount      Float
+  type        String   // "DEPOSIT" | "WITHDRAWAL" | "FEE"
+  status      String   @default("PENDING")
+  referenceId String?
+  user        User     @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([referenceId])
+}
+
+model UserActivity {
+  id        String   @id @default(uuid())
+  userId    String
+  action    String   // "LOGIN" | "TRADE" | "PASSWORD_CHANGE"
+  ipAddress String?
+  metadata  Json?
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@index([userId, action])
+  @@index([createdAt])
+}
+
+model MarketEvent {
+  id          String   @id @default(uuid())
+  symbol      String?
+  title       String
+  description String
+  impact      String   // "HIGH" | "MEDIUM" | "LOW"
+  source      String   // "NEWS" | "SEC" | "COMPANY"
+  createdAt   DateTime @default(now())
+
+  @@index([symbol])
+}
