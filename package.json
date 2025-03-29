@@ -19,5 +19,8 @@
   "type": "commonjs",
   "devDependencies": {
     "concurrently": "^9.1.2"
+  },
+  "dependencies": {
+    "next-auth": "^5.0.0-beta.25"
   }
 }
