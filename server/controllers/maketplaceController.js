@@ -2,96 +2,6 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
-// Get all available stocks
-exports.getAllStocks = async (req, res) => {
-  try {
-    const { sector, sort, order, limit = 20, page = 1 } = req.query;
-    
-    const skip = (Number(page) - 1) * Number(limit);
-    
-    // Build filter conditions
-    const where = {};
-    if (sector) {
-      where.sector = sector;
-    }
-    
-    // Build sort options
-    const orderBy = {};
-    if (sort) {
-      orderBy[String(sort)] = order === 'desc' ? 'desc' : 'asc';
-    } else {
-      orderBy.symbol = 'asc';
-    }
-    
-    // Get total count for pagination
-    const totalStocks = await prisma.stock.count({ where });
-    
-    // Get stocks with pagination
-    const stocks = await prisma.stock.findMany({
-      where,
-      orderBy,
-      take: Number(limit),
-      skip,
-    });
-    
-    return res.status(200).json({
-      stocks,
-      pagination: {
-        total: totalStocks,
-        page: Number(page),
-        limit: Number(limit),
-        pages: Math.ceil(totalStocks / Number(limit))
-      }
-    });
-  } catch (error) {
-    console.error('Error getting stocks:', error);
-    return res.status(500).json({ error: 'Failed to fetch stocks' });
-  }
-};
-
-// Get stock details by symbol
-exports.getStockBySymbol = async (req, res) => {
-  try {
-    const { symbol } = req.params;
-    
-    const stock = await prisma.stock.findUnique({
-      where: { symbol },
-      include: {
-        history: {
-          orderBy: { timestamp: 'desc' },
-          take: 30 // Last 30 history points
-        }
-      }
-    });
-    
-    if (!stock) {
-      return res.status(404).json({ error: 'Stock not found' });
-    }
-    
-    return res.status(200).json(stock);
-  } catch (error) {
-    console.error('Error getting stock:', error);
-    return res.status(500).json({ error: 'Failed to fetch stock details' });
-  }
-};
-
-// Get sectors for filtering
-exports.getSectors = async (req, res) => {
-  try {
-    const sectors = await prisma.stock.groupBy({
-      by: ['sector'],
-      where: {
-        sector: { not: null }
-      }
-    });
-    
-    return res.status(200).json(sectors.map(s => s.sector));
-  } catch (error) {
-    console.error('Error getting sectors:', error);
-    return res.status(500).json({ error: 'Failed to fetch sectors' });
-  }
-};
-
 // Get market events
 exports.getMarketEvents = async (req, res) => {
   try {
@@ -449,5 +359,22 @@ exports.getMarketTrends = async (req, res) => {
   } catch (error) {
     console.error('Error getting market trends:', error);
     return res.status(500).json({ error: 'Failed to fetch market trends' });
+  }
+};
+
+// Get sectors (for marketplace filters/exploration)
+exports.getSectors = async (req, res) => {
+  try {
+    const sectors = await prisma.stock.groupBy({
+      by: ['sector'],
+      where: {
+        sector: { not: null }
+      }
+    });
+    
+    return res.status(200).json(sectors.map(s => s.sector));
+  } catch (error) {
+    console.error('Error getting sectors:', error);
+    return res.status(500).json({ error: 'Failed to fetch sectors' });
   }
 };
