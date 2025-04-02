@@ -6,7 +6,9 @@ const userRoutes = require('./routes/userRoutes');
 const stockRoutes = require('./routes/stockRoutes');
 const transactionRoutes = require('./routes/transactionRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
-const marketplaceRoutes = require('./routes/marketplaceRoutes')
+const marketplaceRoutes = require('./routes/marketplaceRoutes');
+const chatRoutes = require('./routes/chatRoutes');
+const portfolioRoutes = require('./routes/portfolioRoutes'); // Add this line
 
 const prisma = new PrismaClient();
 const app = express();
@@ -24,6 +26,8 @@ app.use('/transactions', transactionRoutes);  // For POST /transactions
 app.use('/users', transactionRoutes);         // For GET /users/:userId/transactions
 app.use('/', paymentRoutes);
 app.use('/marketplace', marketplaceRoutes);
+app.use('/chat', chatRoutes); // Fixed this line that was incomplete
+app.use('/portfolios', portfolioRoutes); // Add this line
 
 // Database connection
 prisma.$connect()
