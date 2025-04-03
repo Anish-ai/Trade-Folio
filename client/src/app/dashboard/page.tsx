@@ -17,9 +17,17 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
-      {/* Navbar with Logout Button */}
+      
+      {/* Navbar with User Info and Logout Button */}
       <nav className="flex justify-between items-center bg-white shadow-md p-4 mb-6">
-        <h1 className="text-2xl font-bold">GenAI Financial Assistant</h1>
+        <div className="flex items-center">
+          <h1 className="text-2xl font-bold">GenAI Financial Assistant</h1>
+          {session?.user?.name && (
+            <span className="ml-4 text-gray-600">
+              Welcome, {session.user.name}
+            </span>
+          )}
+        </div>
         <button
           onClick={() => signOut()}
           className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition"
