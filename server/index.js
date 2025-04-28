@@ -1,6 +1,11 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
+const helmet = require('helmet');
+const compression = require('compression');
+const rateLimit = require('express-rate-limit');
+const routes = require('./routes');
 const { PrismaClient } = require('@prisma/client');
 const userRoutes = require('./routes/userRoutes');
 const stockRoutes = require('./routes/stockRoutes');
@@ -8,16 +13,34 @@ const transactionRoutes = require('./routes/transactionRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const marketplaceRoutes = require('./routes/marketplaceRoutes');
 const chatRoutes = require('./routes/chatRoutes');
-const portfolioRoutes = require('./routes/portfolioRoutes'); // Add this line
+const portfolioRoutes = require('./routes/portfolioRoutes');
 
+// Initialize Prisma
 const prisma = new PrismaClient();
-const app = express();
-const PORT = process.env.PORT || 3000;
 
-// Middleware
-app.use(cors());
-app.use(morgan('dev'));
-app.use(express.json());
+// Initialize express app
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+// Apply middleware
+app.use(helmet()); // Security headers
+app.use(cors()); // Cross-origin resource sharing
+app.use(compression()); // Compress responses
+app.use(express.json()); // Parse JSON bodies
+app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
+app.use(morgan('dev')); // Logging
+
+// Rate limiting
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    error: 'Too many requests, please try again after 15 minutes'
+  }
+});
+app.use('/api', apiLimiter);
 
 // Routes
 app.use('/users', userRoutes);
@@ -26,30 +49,46 @@ app.use('/transactions', transactionRoutes);  // For POST /transactions
 app.use('/users', transactionRoutes);         // For GET /users/:userId/transactions
 app.use('/', paymentRoutes);
 app.use('/marketplace', marketplaceRoutes);
-app.use('/chat', chatRoutes); // Fixed this line that was incomplete
-app.use('/portfolios', portfolioRoutes); // Add this line
+app.use('/chat', chatRoutes);
+app.use('/portfolios', portfolioRoutes);
 
-// Database connection
-prisma.$connect()
-    .then(() => console.log('Connected to database'))
-    .catch(error => {
-        console.error('Database connection error:', error);
-        process.exit(1);
-    });
+// API routes
+app.use('/api', routes);
 
-// Error handling
-app.use((req, res) => {
-    res.status(404).json({ message: 'Route not found' });
+// Health check route
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// Catch-all route for undefined routes
+app.use('*', (req, res) => {
+  res.status(404).json({ error: 'Route not found' });
+});
+
+// Global error handler
 app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({ 
-        message: 'Internal server error',
-        ...(process.env.NODE_ENV === 'development' && { error: err.message })
-    });
+  console.error('Global error:', err);
+  const statusCode = err.statusCode || 500;
+  const message = err.message || 'Internal Server Error';
+  res.status(statusCode).json({ error: message });
 });
 
+// Start server
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
+
+module.exports = app; // For testing
+
+// #DATABASE
+// DATABASE_URL="postgresql://trade-folio_owner:npg_rgpP1WoK2xan@ep-floral-tree-a512l30f-pooler.us-east-2.aws.neon.tech/trade-folio?sslmode=require"
+
+// # Server
+// PORT=5000
+// JWT_SECRET="your_jwt_secret"
+
+// # Next.js (client/.env.local)
+// NEXT_PUBLIC_API_BASE_URL=http://localhost:5000
+
+// # Gemini API Configuration
+// GEMINI_API_KEY=your_gemini_api_key_here
