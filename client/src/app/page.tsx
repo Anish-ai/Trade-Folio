@@ -289,8 +289,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-// NEXTAUTH_URL=http://localhost:3000
-// NEXTAUTH_SECRET=8f42a73d6f1e3725b4c9234e8b58436c9d8913ecf453f7c92a7b551ef9385f2b
-// GOOGLE_CLIENT_ID=434171448237-u06a0lqgrglu1d6b29mhovngc6efq69m.apps.googleusercontent.com
-// GOOGLE_CLIENT_SECRET=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

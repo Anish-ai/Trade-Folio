@@ -79,16 +79,3 @@ app.listen(PORT, () => {
 });
 
 module.exports = app; // For testing
-
-// #DATABASE
-// DATABASE_URL="postgresql://trade-folio_owner:npg_rgpP1WoK2xan@ep-floral-tree-a512l30f-pooler.us-east-2.aws.neon.tech/trade-folio?sslmode=require"
-
-// # Server
-// PORT=5000
-// JWT_SECRET="your_jwt_secret"
-
-// # Next.js (client/.env.local)
-// NEXT_PUBLIC_API_BASE_URL=http://localhost:5000
-
-// # Gemini API Configuration
-// GEMINI_API_KEY=your_gemini_api_key_here
